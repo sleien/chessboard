@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     if(gameMethods[board[px][py]]) {
                         console.log(board[px][py]);
-                        validMove = gameMethods[board[px][py]](px, py, move, board);
+                        validMove = gameMethods[board[px][py]](py, px, move, board);
                     }
 
                     console.log('validMove', validMove);
@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         saveGameData(gameData);
                         // update board
                         cells[px * 8 + py].classList.remove(`icon-${piece}`);
+                        cells[px * 8 + py].classList.remove('selected');
                         cells[px * 8 + py].classList.add('empty');
                         cells[x * 8 + y].classList.add(`icon-${piece}`);
                     }

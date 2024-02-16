@@ -1,0 +1,102 @@
+:root {
+    --icon-size: min(10vh, 10vw);
+    /* Size of each icon */
+    --theme-default-background-bright: #f4f4f4;
+    --theme-default-background-dark: #333;
+}
+
+
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--theme-default-background-bright);
+    color: var(--theme-default-background-dark);
+}
+
+.chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: calc(var(--icon-size) * 8);
+    height: calc(var(--icon-size) * 8);
+    margin: 50px auto;
+    border: 2px solid var(--theme-default-background-dark);
+}
+
+.chessboard > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2em;
+}
+
+.chessboard > .bright {
+    background-color: var(--theme-default-background-bright);
+}
+
+.chessboard > .dark {
+    background-color: var(--theme-default-background-dark);
+}
+
+.selected {
+    background-color: rgb(255, 187, 0) !important;
+}
+
+.icon-white-king, .icon-white-queen, .icon-white-bishop, .icon-white-knight, .icon-white-rook, .icon-white-pawn, .icon-black-king, .icon-black-queen, .icon-black-bishop, .icon-black-knight, .icon-black-rook, .icon-black-pawn{
+    width: 100%;
+    /* Width of each icon */
+    height: 100%;
+    /* Height of each icon */
+    background-image: url('Chess_Pieces_Sprite.svg');
+    background-size: 600% 200%;
+    /* Resize SVG to cover 6x2 grid */
+}
+
+.icon-white-king {
+    background-position: 0 0;
+}
+
+.icon-white-queen {
+    background-position: 500% 0;
+}
+
+.icon-white-bishop {
+    background-position: 400% 0;
+}
+
+.icon-white-knight {
+    background-position: 300% 0;
+}
+
+.icon-white-rook {
+    background-position: 200% 0;
+}
+
+.icon-white-pawn {
+    background-position: 100% 0;
+}
+
+.icon-black-king {
+    background-position: 0 100%;
+}
+
+.icon-black-queen {
+    background-position: 500% 100%;
+}
+
+.icon-black-bishop {
+    background-position: 400% 100%;
+}
+
+.icon-black-knight {
+    background-position: 300% 100%;
+}
+
+.icon-black-rook {
+    background-position: 200% 100%;
+}
+
+.icon-black-pawn {
+    background-position: 100% 100%;
+}

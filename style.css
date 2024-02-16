@@ -1,5 +1,5 @@
 :root {
-    --icon-size: min(10vh, 10vw);
+    --icon-size: min(8vh, 8vw);
     /* Size of each icon */
     --theme-default-background-bright: #f4f4f4;
     --theme-default-background-dark: #333;
@@ -14,14 +14,68 @@ body, html {
     color: var(--theme-default-background-dark);
 }
 
+.meta-board {
+    width: calc(var(--icon-size) * 10);
+    height: calc(var(--icon-size) * 10);
+    display: grid;
+    grid-template-areas: 
+    ". lt ."
+    "nl b nr"
+    ". lb .";
+    grid-template-columns: 1fr 8fr 1fr;
+    grid-template-rows: 1fr 8fr 1fr;
+}
+
+.numbers, .letters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
+}
+
+.numbers {
+    flex-direction: column;
+}
+
+.letters {
+    flex-direction: row;
+}
+
+.numbers.left {
+    grid-area: nl;
+}
+
+.numbers.right {
+    grid-area: nr;
+}
+
+.letters.top {
+    grid-area: lt;
+}
+
+.letters.bottom {
+    grid-area: lb;
+}
+
+.numbers > div, .letters > div {
+    font-size: 1.5em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--icon-size);
+    height: var(--icon-size);
+}
+
+
+
 .chessboard {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
     width: calc(var(--icon-size) * 8);
     height: calc(var(--icon-size) * 8);
-    margin: 50px auto;
     border: 2px solid var(--theme-default-background-dark);
+    grid-area: b;
 }
 
 .chessboard > div {

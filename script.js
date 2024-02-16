@@ -10,17 +10,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    let numbersContainers = document.getElementsByClassName('numbers');
+    let lettersContainers = document.getElementsByClassName('letters');
+
+    Array.from(numbersContainers).forEach((container) => {
+        for (let i = 0; i < chessboardSize; i++) {
+            let number = document.createElement('div');
+            number.innerText = chessboardSize - i;
+            container.appendChild(number);
+        }
+    });
+
+    Array.from(lettersContainers).forEach((container) => {
+        for (let i = 0; i < chessboardSize; i++) {
+            let letter = document.createElement('div');
+            letter.innerText = String.fromCharCode(65 + i);
+            container.appendChild(letter);
+        }
+    });
+
     //load local storage
     let gameData = loadGameData() || getStartData();
     saveGameData(gameData);
+
+    //initialize controls
+    let resetButton = document.getElementsByClassName('reset')[0];
+    let undoButton = document.getElementsByClassName('undo')[0];
+    let redoButton = document.getElementsByClassName('redo')[0];
+    resetButton.addEventListener('click', () => {
+        clearGameData();
+        location.reload();
+    });
+    undoButton.addEventListener('click', () => {
+        let gameData = loadGameData();
+        if (gameData.moves.length > 0) {
+            let lastMove = gameData.moves.pop();
+            gameData.undoMoves.push(lastMove);
+            let [to, from] = [mapChessNotationToMove(lastMove.from), mapChessNotationToMove(lastMove.to)];
+            gameData.board[from.y][from.x] = lastMove.piece;
+            gameData.board[to.y][to.x] = lastMove.oldPiece;
+            gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
+            saveGameData(gameData);
+            updateBoard(from, to, lastMove.piece, null, document.querySelectorAll('.chessboard div'), lastMove.oldPiece);
+            updateMoves();
+        }
+    });
+    redoButton.addEventListener('click', () => {
+        let gameData = loadGameData();
+        if (gameData.undoMoves.length > 0) {
+            let lastMove = gameData.undoMoves.pop();
+            gameData.moves.push(lastMove);
+            let [from, to] = [mapChessNotationToMove(lastMove.from), mapChessNotationToMove(lastMove.to)];
+            gameData.board[from.y][from.x] = lastMove.piece;
+            gameData.board[to.y][to.x] = lastMove.oldPiece;
+            gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
+            saveGameData(gameData);
+            updateBoard(from, to, lastMove.piece, lastMove.oldPiece, document.querySelectorAll('.chessboard div'));
+            updateMoves();
+        }
+    });
+
+
+
+    //initialize meta data
+    document.getElementsByClassName('current-player')[0].innerText = ("Current Player: " + (gameData.currentPlayer === 'white' ? 'White' : 'Black'));
+    document.getElementsByClassName('game-name')[0].innerText = "Game Name: " + gameData.gameName;
+    document.getElementsByClassName('game-moves')[0].innerText = gameData.moves.reverse().map((move) => (move.player).charAt(0).toUpperCase() + ': ' + move.from + ' -> ' + move.to).join('\n');
+
+    //initialize game
 
     let board = gameData.board;
     let cells = document.querySelectorAll('.chessboard div');
 
     cells.forEach((cell, index) => {
-        let x = Math.floor(index / chessboardSize);
-        let y = index % chessboardSize;
-        let piece = board[x][y];
+        let y = Math.floor(index / chessboardSize);
+        let x = index % chessboardSize;
+        let piece = board[y][x];
         cell.classList.add(piece === 'e' ? 'empty' : `icon-${piece}`);
         //select piece
         if (gameData.currentPiece && gameData.currentPiece.x === x && gameData.currentPiece.y === y) {
@@ -29,21 +94,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         //on cell click
         cell.addEventListener('click', () => {
-            let x = Math.floor(index / chessboardSize);
-            let y = index % chessboardSize;
-            let piece = board[x][y];
+            let y = Math.floor(index / chessboardSize);
+            let x = index % chessboardSize;
+            let piece = board[y][x];
 
             if (gameData.gameStatus === 'active') {
                 if (gameData.currentPiece === null) {
                     if (piece !== 'e' && piece.includes(gameData.currentPlayer)) {
                         gameData.currentPiece = { x, y };
                         saveGameData(gameData);
-                        cells[x * 8 + y].classList.add('selected');
+                        cells[y * 8 + x].classList.add('selected');
                     }
                 } else if (gameData.currentPiece.x === x && gameData.currentPiece.y === y) {
                     gameData.currentPiece = null;
                     saveGameData(gameData);
-                    cells[x * 8 + y].classList.remove('selected');
+                    cells[y * 8 + x].classList.remove('selected');
                 } else {
                     let [px, py] = [gameData.currentPiece.x, gameData.currentPiece.y];
                     let validMove = false;
@@ -52,25 +117,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (piece === 'e' || !piece.includes(gameData.currentPlayer)) {
                         validMove = true;
                     }
-                    if(gameMethods[board[px][py]]) {
-                        console.log(board[px][py]);
-                        validMove = gameMethods[board[px][py]](py, px, move, board);
+                    if (gameMethods[board[py][px]]) {
+                        validMove = gameMethods[board[py][px]](px, py, move, board);
                     }
 
-                    console.log('validMove', validMove);
-
                     if (validMove) {
-                        let piece = board[px][py];
-                        board[px][py] = 'e';
-                        board[x][y] = piece;
+                        let piece = board[py][px];
+                        let oldPiece = board[y][x];
+                        board[py][px] = 'e';
+                        board[y][x] = piece;
                         gameData.currentPiece = null;
+                        gameData.moves.push({ 'from': mapMoveToChessNotation({ x: px, y: py }), 'to': mapMoveToChessNotation({ x, y }), 'piece': piece, 'oldPiece': oldPiece, 'player': gameData.currentPlayer });
+                        updateMoves();
                         gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
+                        document.getElementsByClassName('current-player')[0].innerText = ("Current Player: " + (gameData.currentPlayer === 'white' ? 'White' : 'Black'));
+                        gameData.undoMoves = [];
                         saveGameData(gameData);
                         // update board
-                        cells[px * 8 + py].classList.remove(`icon-${piece}`);
-                        cells[px * 8 + py].classList.remove('selected');
-                        cells[px * 8 + py].classList.add('empty');
-                        cells[x * 8 + y].classList.add(`icon-${piece}`);
+                        updateBoard({ x: px, y: py }, { x, y }, piece, oldPiece, cells);
+                        if (oldPiece.includes('king')) {
+                            gameData.gameStatus = 'finished';
+                            saveGameData(gameData);
+                            alert(`${gameData.currentPlayer === 'white' ? 'Black' : 'White'} wins!`);
+                        }
                     }
                 }
             }
@@ -90,6 +159,8 @@ function loadGameData() {
 
 function clearGameData() {
     //clear game data from local storage
+    let currentTimestamp = new Date().getTime();
+    localStorage.setItem('gameData_' + currentTimestamp, localStorage.getItem('gameData'));
     localStorage.removeItem('gameData');
 }
 
@@ -109,6 +180,10 @@ function getStartData() {
         'currentPlayer': 'white',
         'currentPiece': null,
         'gameStatus': 'active',
+        'gameId': uuidv4(),
+        'gameName': 'Chess Game',
+        'moves': [],
+        'undoMoves': [],
         'board': [
             ['black-rook', 'black-knight', 'black-bishop', 'black-queen', 'black-king', 'black-bishop', 'black-knight', 'black-rook'],
             ['black-pawn', 'black-pawn', 'black-pawn', 'black-pawn', 'black-pawn', 'black-pawn', 'black-pawn', 'black-pawn'],
@@ -122,8 +197,48 @@ function getStartData() {
     }
 }
 
-//gameMethods
+function uuidv4() {
+    //generate uuid
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        let r = Math.random() * 16 | 0,
+            v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
+function mapMoveToChessNotation(move) {
+    //map move to chess notation
+    let x = String.fromCharCode(65 + move.x);
+    let y = 8 - move.y;
+    return x + y;
+}
+
+function mapChessNotationToMove(chessNotation) {
+    //map chess notation to move
+    let x = chessNotation.charCodeAt(0) - 65;
+    let y = 8 - parseInt(chessNotation[1]);
+    return { x, y };
+}
+
+function updateBoard(from, to, piece, oldPiece, cells, ancientPiece = null) {
+    let [px, py] = [from.x, from.y];
+    let [x, y] = [to.x, to.y];
+    cells[py * 8 + px].classList.remove(`icon-${piece}`);
+    cells[py * 8 + px].classList.remove('selected');
+    cells[py * 8 + px].classList.add('empty');
+    cells[y * 8 + x].classList.add(`icon-${piece}`);
+    cells[y * 8 + x].classList.remove(`icon-${oldPiece}`);
+    if (ancientPiece) {
+        cells[py * 8 + px].classList.add(`icon-${ancientPiece}`);
+    }
+}
+
+function updateMoves() {
+    let gameData = loadGameData();
+    document.getElementsByClassName('game-moves')[0].innerText = gameData.moves.reverse().map((move) => (move.player).charAt(0).toUpperCase() + ': ' + move.from + ' -> ' + move.to).join('\n');
+}
+
+//gameMethods
 let gameMethods = {
     'black-pawn': (px, py, move, board) => {
         let [x, y] = [move.x, move.y];
@@ -131,13 +246,13 @@ let gameMethods = {
 
         if (px === x && py === y) {
             validMove = false;
-        } else if (px === x && py === y - 1 && board[x][y] === 'e') {
+        } else if (px === x && py === y - 1 && board[y][x] === 'e') {
             validMove = true;
-        } else if (px === x && py === y - 2 && py === 6 && board[x][y] === 'e' && board[x][y - 1] === 'e') {
+        } else if (px === x && py === y - 2 && py === 1 && board[y][x] === 'e' && board[x][y - 1] === 'e') {
             validMove = true;
-        } else if (px === x - 1 && py === y - 1 && board[x][y].includes('white')) {
+        } else if (px === x - 1 && py === y - 1 && board[y][x].includes('white')) {
             validMove = true;
-        } else if (px === x + 1 && py === y - 1 && board[x][y].includes('white')) {
+        } else if (px === x + 1 && py === y - 1 && board[y][x].includes('white')) {
             validMove = true;
         }
 
@@ -147,17 +262,15 @@ let gameMethods = {
         let [x, y] = [move.x, move.y];
         let validMove = false;
 
-        console.log('px', px, 'py', py, 'x', x, 'y', y);
-
         if (px === x && py === y) {
             validMove = false;
-        } else if (px === x && py === y + 1 && board[x][y] === 'e') {
+        } else if (px === x && py === y + 1 && board[y][x] === 'e') {
             validMove = true;
-        } else if (px === x && py === y + 2 && py === 1 && board[x][y] === 'e' && board[x][y + 1] === 'e') {
+        } else if (px === x && py === y + 2 && py === 6 && board[y][x] === 'e' && board[x][y + 1] === 'e') {
             validMove = true;
-        } else if (px === x - 1 && py === y + 1 && board[x][y].includes('black')) {
+        } else if (px === x - 1 && py === y + 1 && board[y][x].includes('black')) {
             validMove = true;
-        } else if (px === x + 1 && py === y + 1 && board[x][y].includes('black')) {
+        } else if (px === x + 1 && py === y + 1 && board[y][x].includes('black')) {
             validMove = true;
         }
 

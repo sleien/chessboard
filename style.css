@@ -14,6 +14,15 @@ body, html {
     color: var(--theme-default-background-dark);
 }
 
+body > div {
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    flex-direction: column;
+}
+
 .meta-board {
     width: calc(var(--icon-size) * 10);
     height: calc(var(--icon-size) * 10);
@@ -24,6 +33,11 @@ body, html {
     ". lb .";
     grid-template-columns: 1fr 8fr 1fr;
     grid-template-rows: 1fr 8fr 1fr;
+}
+
+.meta-controls {
+    flex-direction: row;
+    gap: 1em;
 }
 
 .numbers, .letters {
@@ -65,8 +79,6 @@ body, html {
     width: var(--icon-size);
     height: var(--icon-size);
 }
-
-
 
 .chessboard {
     display: grid;

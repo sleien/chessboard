@@ -47,12 +47,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             let lastMove = gameData.moves.pop();
             gameData.undoMoves.push(lastMove);
             let [to, from] = [mapChessNotationToMove(lastMove.from), mapChessNotationToMove(lastMove.to)];
-            gameData.board[from.y][from.x] = lastMove.piece;
-            gameData.board[to.y][to.x] = lastMove.oldPiece;
+            console.log(gameData.board[from.y][from.x])
+            gameData.board[from.y][from.x] = lastMove.oldPiece;
+            console.log(gameData.board[from.y][from.x])
+            gameData.board[to.y][to.x] = lastMove.piece;
             gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
             saveGameData(gameData);
             updateBoard(from, to, lastMove.piece, null, document.querySelectorAll('.chessboard div'), lastMove.oldPiece);
             updateMoves();
+            updatePlayer();
         }
     });
     redoButton.addEventListener('click', () => {
@@ -61,12 +64,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             let lastMove = gameData.undoMoves.pop();
             gameData.moves.push(lastMove);
             let [from, to] = [mapChessNotationToMove(lastMove.from), mapChessNotationToMove(lastMove.to)];
-            gameData.board[from.y][from.x] = lastMove.piece;
-            gameData.board[to.y][to.x] = lastMove.oldPiece;
+            console.log(gameData.board[from.y][from.x])
+            gameData.board[from.y][from.x] = lastMove.oldPiece;
+            console.log(gameData.board[from.y][from.x])
+            gameData.board[to.y][to.x] = lastMove.piece;
             gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
             saveGameData(gameData);
             updateBoard(from, to, lastMove.piece, lastMove.oldPiece, document.querySelectorAll('.chessboard div'));
             updateMoves();
+            updatePlayer();
         }
     });
 
@@ -128,11 +134,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         board[y][x] = piece;
                         gameData.currentPiece = null;
                         gameData.moves.push({ 'from': mapMoveToChessNotation({ x: px, y: py }), 'to': mapMoveToChessNotation({ x, y }), 'piece': piece, 'oldPiece': oldPiece, 'player': gameData.currentPlayer });
-                        updateMoves();
                         gameData.currentPlayer = gameData.currentPlayer === 'white' ? 'black' : 'white';
-                        document.getElementsByClassName('current-player')[0].innerText = ("Current Player: " + (gameData.currentPlayer === 'white' ? 'White' : 'Black'));
                         gameData.undoMoves = [];
                         saveGameData(gameData);
+                        updatePlayer();
+                        updateMoves();
                         // update board
                         updateBoard({ x: px, y: py }, { x, y }, piece, oldPiece, cells);
                         if (oldPiece.includes('king')) {
@@ -236,6 +242,11 @@ function updateBoard(from, to, piece, oldPiece, cells, ancientPiece = null) {
 function updateMoves() {
     let gameData = loadGameData();
     document.getElementsByClassName('game-moves')[0].innerText = gameData.moves.reverse().map((move) => (move.player).charAt(0).toUpperCase() + ': ' + move.from + ' -> ' + move.to).join('\n');
+}
+
+function updatePlayer() {
+    let gameData = loadGameData();
+    document.getElementsByClassName('current-player')[0].innerText = ("Current Player: " + (gameData.currentPlayer === 'white' ? 'White' : 'Black'));
 }
 
 //gameMethods
